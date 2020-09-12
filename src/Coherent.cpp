@@ -33,6 +33,8 @@ void Coherent::onInit() {
     param_loader.loadParam("altitude/lower_altitude", altitude_lower_value);
     param_loader.loadParam("altitude/upper_altitude", altitude_upper_value);
 
+    param_loader.loadParam("sectors/margins", margin); 
+
     param_loader.loadParam("loop/rate", run_rate);
 
 
@@ -62,6 +64,7 @@ void Coherent::onInit() {
     ROS_DEBUG("[Coherent - DEBUG]: Random initial waypoint: [%0.2f, %0.2f, %0.2f]", way_point[0], way_point[1], way_point[2]);
     is_initialized_ = true;    
     goal();
+    set_margin();
     ROS_INFO_ONCE("[Coherent]: Goal initialized");
     state = FORWARD;
     ros::spin();    
@@ -176,8 +179,7 @@ void Coherent::callbackObstacleLIDAR(const mrs_msgs::ObstacleSectors::ConstPtr& 
     sector[4] = scan->sectors[4];
     sector[5] = scan->sectors[5];
     sector[6] = scan->sectors[6];
-    sector[7] = scan->sectors[7];
-        
+    sector[7] = scan->sectors[7];      
 }
 
 /*
@@ -188,28 +190,24 @@ void Coherent::callbackObstacleLIDAR(const mrs_msgs::ObstacleSectors::ConstPtr& 
 
 /* callbackUAVCoherence */
 void Coherent::callbackUAVCoherence(const ros::TimerEvent& event){
-    
+
+    get_sector_information();
+
     /* Check avoidance state */
     int critically_close = 0;
-    for (int i = 0; i < 8; i++) {
-        float sector_value = sector.at(i);
-        if ( sector_value != -1){
-            if (sector_value <= avoid_distance) {
-                critically_close++;
-            }    
-        }     
+
+    for (int i = 0; i < sector_information.size(); i++) {
+        int sector_value = sector_information.at(i);
+        if (sector_value == 1) {
+            critically_close++;
+        }
     }
 
-    if (0 < neighbors_range){
-        if (neighbors_range <= avoid_distance){
-            critically_close++;
-        }            
-    }
     if (critically_close > 0) {
         if (state != AVOIDANCE) {
             previous_state = state;
         }
-        state = AVOIDANCE;        
+        state = AVOIDANCE;
     }
 
     /* Pub state */
@@ -223,7 +221,7 @@ void Coherent::callbackUAVCoherence(const ros::TimerEvent& event){
     switch (state) {
         case FORWARD:
             ROS_DEBUG("[Coherent - DEBUG]: UAV is in FORWARD state.");
-            if (neighbors_count < alpha ) {
+            if (neighbors_count < neighbors_previous && neighbors_count < alpha) {
                 way_point = rotate_2d(way_point, M_PI);
                 counter = 0;
                 state = COHERENCE;
@@ -257,28 +255,30 @@ void Coherent::callbackUAVCoherence(const ros::TimerEvent& event){
             }
             break;
         case AVOIDANCE: {
-            ROS_DEBUG("[Coherent - DEBUG]:UAV is in AVOIDANCE state.");
+            ROS_DEBUG("[Coherent - DEBUG]: UAV is in AVOIDANCE state.");
             // Get average of all avoidance forces
             Eigen::Vector3d sum = Eigen::Vector3d::Zero();
             Eigen::Vector3d one_x(1, 0, 0);
-            for (int i = 0; i < 8; i++) {
-                float sector_value = sector.at(i);
+            for (int i = 0; i < sector_information.size(); i++) {
+                float sector_value = sector_information.at(i);
                 // For each sector with critically close object
-                if (sector_value <= localization_distance) {
+                if (sector_value == 1) {
                     // Sector from + 1/2 of sector
-                    float rot_angle = sector.at(i) + (sector.at(i) - sector.at(i)) / (float) 2;
+                    float rot_angle = sectors_margin.at(i)[0] + (sectors_margin.at(i)[1] - sectors_margin.at(i)[0]) / (float) 2;
                     sum -= rotate_2d(one_x, rot_angle);
                 }
             }
             way_point = sum / (double) critically_close;
-            ROS_DEBUG("[Coherent - DEBUG]:Waypoint: [%0.2f %0.2f %0.2f].", way_point[0], way_point[1], way_point[2]);
+            ROS_DEBUG("[Coherent - DEBUG]: Waypoint: [%0.2f %0.2f %0.2f].", way_point[0], way_point[1], way_point[2]);
             state = previous_state;
         }
             break;
         default:
-            ROS_ERROR("[Coherent - ERROR]:No state present.");
+            ROS_ERROR("[Coherent - ERROR]: No state present.");
             break;
     }
+    counter++;
+    neighbors_previous = neighbors_count;
     /* sends goto */
     ROS_DEBUG("[Coherent - DEBUG]: Way point: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
     way_point = limit(way_point, dist_max_one_step);
@@ -296,7 +296,7 @@ void Coherent::GoTo(Eigen::Vector3d position) {
     if (maintain_constant_altitude) {
         position[2] = altitude_constant_value;
     }
-    ROS_INFO("[Coherent]:%s flies to [%0.2f, %0.2f, %0.2f].", _this_uav_name_.c_str() , position[0], position[1], position[2]);
+    ROS_INFO("[Coherent]: %s flies to [%0.2f, %0.2f, %0.2f].", _this_uav_name_.c_str() , position[0], position[1], position[2]);
     mrs_msgs::ReferenceStampedSrv srv_reference_stamped_msg;
     srv_reference_stamped_msg.request.header.stamp    = ros::Time::now();
     srv_reference_stamped_msg.request.header.frame_id = _this_uav_name_ + "/" + "stable_origin" ;
@@ -340,6 +340,23 @@ Eigen::Vector3d Coherent::rotate_2d(Eigen::Vector3d vector, double angle_in_rad)
     return Eigen::Vector3d(x, y, 0);
 }
 
+/* Margins of sectors */
+void Coherent::set_margin(){
+    range_limited_to_sectors = false;
+    if (margin.size() % 2 != 0) {
+        ROS_ERROR("Sensor sectors are wrongly defined in config file. Ending rosnode.");
+        ros::shutdown();
+    } else if (margin.size() > 0) {
+        range_limited_to_sectors = true;
+    }
+    for (int i = 0; i < margin.size(); i += 2) {
+        std::vector<double> one_sector;
+        one_sector.push_back(margin.at(i));
+        one_sector.push_back(margin.at(i + 1));
+        sectors_margin.push_back(one_sector);
+    }  
+}
+
 /* random number */
 double Coherent::random_number(double min, double max) {
     return (max - min) * ((double) rand() / (double) RAND_MAX) + min;
@@ -348,7 +365,7 @@ double Coherent::random_number(double min, double max) {
 /* Goal */
 void Coherent::goal(){
     if (tmp_goals.size() % 3 != 0) {
-        ROS_ERROR("[Coherent - ERROR]:Goals were wrongly defined in goal.yaml file.");
+        ROS_ERROR("[Coherent - ERROR]: Goals were wrongly defined in goal.yaml file.");
         std::exit(-1);
     }
     current_goal_index = 0;
@@ -362,6 +379,42 @@ void Coherent::goal(){
         ROS_DEBUG("[Coherent - DEBUG]: \t[%0.1f, %0.1f, %0.1f]", sub_goals.at(i)[0], sub_goals.at(i)[1], sub_goals.at(i)[2]);
     }
     current_goal = sub_goals[0];
+}
+
+/* Sector information */
+std::vector<int> Coherent::get_sector_information() {
+    // For each sector
+    for (int i = 0; i < sectors_margin.size(); i++) {
+        int status = 0;
+        // Sector is defined as angle from/to
+        double from = sectors_margin.at(i)[0], to = sectors_margin.at(i)[1];
+        if (to < from) {
+            to += 2 * M_PI;
+        }
+        // For each uav
+        for (int u = 0; u < _uav_names_.size(); u++) {
+            // If is in range of sight
+            if (neighbors_range <= localization_distance) {
+                // // If between margins
+                // if (from <= uav_angle && uav_angle <= to) {
+                //     status = -1;
+                    if (neighbors_range <= avoid_distance) {
+                        status = 1;
+                        break;
+                    }
+                // }
+            }
+        }
+        // If not already critical distance in sector
+        for (int i = 0; i < 8; i++){
+            if (sector.at(i) <= avoid_distance) {
+                status = 1;
+                break;
+            }
+        }
+        sector_information.push_back(status);
+    }
+    return sector_information;
 }
 
 /* Get positive angle */
@@ -383,7 +436,7 @@ Eigen::Vector3d Coherent::limit(Eigen::Vector3d vec, double value) {
     if (vec.norm() > value) {
         vec = normalize(vec);
         vec *= value;
-        ROS_DEBUG("Way point needed to be limited.");
+        ROS_DEBUG("[Coherent - DEBUG]: Way point needed to be limited.");
     }
     return vec;
 }

@@ -41,13 +41,14 @@ private:
     bool is_initialized_;
 
     /* Parameters */
-    std::string              _this_uav_name_;
-    std::vector<std::string> _uav_names_;
+    std::string                              _this_uav_name_; 
+    std::vector<std::string>                 _uav_names_;    
     std::optional<mrs_lib::TransformStamped> tf_output_;
+     
 
     mrs_lib::Transformer                     tfr_;
 
-    Eigen::Vector3d current_position;
+    Eigen::Vector3d                          current_position;
     
 
     int alpha,
@@ -62,6 +63,7 @@ private:
             run_rate;
 
     bool maintain_constant_altitude;
+    bool range_limited_to_sectors;
 
     float avoid_distance;
 
@@ -79,6 +81,7 @@ private:
     std::mutex                                          mutex_neighbors_position_;
     float                                               neighbors_range;
     int                                                 neighbors_count;
+    int                                                 neighbors_previous;
 
     void               callbackObstacleLIDAR(const mrs_msgs::ObstacleSectors::ConstPtr& scan);
     ros::Subscriber    sub_uav_rplidar;
@@ -120,7 +123,17 @@ private:
     int                          current_goal_index;
     std::vector<double>          tmp_goals;
     std::vector<Eigen::Vector3d> sub_goals;
-    Eigen::Vector3d              current_goal;    
+    Eigen::Vector3d              current_goal;
+
+    /* SECTOR INFORMATION */
+    std::vector<int>                         get_sector_information();
+    std::vector<std::vector<double>>         sectors_margin;
+    std::vector<double>                      margin;
+    std::vector<int> sector_information;
+
+    /* SET MARGIN */
+    void set_margin();
+    
 };
 
 } // namespace coherent

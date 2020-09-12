@@ -34,8 +34,8 @@ windows:
   - bumper:
       layout: tiled
       panes:
-        - 'export UAV_NAME=uav1; history -s waitForOdometry; history -s roslaunch mrs_bumper bumper.launch'
-        - 'export UAV_NAME=uav2; history -s waitForOdometry; history -s roslaunch mrs_bumper bumper.launch'
+        - 'export UAV_NAME=uav1; history -s waitForOdometry; history -s roslaunch mrs_bumper bumper.launch config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav2; history -s waitForOdometry; history -s roslaunch mrs_bumper bumper.launch config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
   - takeoff:
       layout: tiled
       panes:
