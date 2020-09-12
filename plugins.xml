@@ -1,0 +1,5 @@
+<library path="lib/libCoherent">
+  <class name="coherent/Coherent" type="coherent::Coherent" base_class_type="nodelet::Nodelet">
+    <description>Coherent nodelet</description>
+  </class>
+</library>

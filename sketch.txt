@@ -1,0 +1,33 @@
+3 states:
+    forward:
+        fly straight with a constante velocity as long as they are forced to enter into 
+        another states
+        CODE:
+            if counter = cf AND state = coherence
+                THEN
+                    is visible(target) THEN
+                        offset =  activeSensor.direction
+                    else
+                        offset = 0
+                    end
+                    turnAngle =  offset + rand(-pi/2, pi/2)
+                    state =  forward
+    coherence:
+        If the required connection with at least alpha neighbors is lost (i.e N < alpha) 
+        MAV, turns and flies back until the connection is restored
+        CODE:
+            if state = forward AND
+                neighbors < prevNeighbors AND
+                neighbors < alpha THEN
+                    turnAngle = -prevNeighbors
+                    lostNeighbors = prevNeighbors
+                    counter = 0
+                    state = coherence
+    avoidance:
+        If an MAV gets closer to another MAV/MAVs or an abstacle than a given threshold 
+        and an evasive manuever has to be performed that controls the MAV in the opposite 
+        direction to avoid the colision
+
+-------------------QUESTIONS-------------------
+parameter uav_name
+Can I use just odometry to this swarm works, or a better localizatior is necessary?

@@ -1,0 +1,19 @@
+loop:
+  rate: 5 # Hz
+  
+altitude:
+  constant: true
+  value: 2 # [m]
+  lower_altitude: 1.0 # [m]
+  upper_altitude: 10.0 # [m]
+
+controller:
+  alpha: 1
+  coherence_loops: 14
+
+uav:
+  localization_distance: 6 # [m]
+  uav_names: ["uav1", "uav2"]
+  max_distance_in_one_step: 0.25 # [m]
+  avoid_distance: 2 # [m]
+ 
