@@ -14,7 +14,7 @@ cd $MY_PATH
 rm .tmuxinator.yml
 
 # link the session file to .tmuxinator.yml
-ln uvdar_test.yml .tmuxinator.yml
+ln coherent-swarm-uvdar.yml .tmuxinator.yml
 
 # start tmuxinator
 tmuxinator

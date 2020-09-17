@@ -48,8 +48,7 @@ private:
 
     mrs_lib::Transformer                     tfr_;
 
-    Eigen::Vector3d                          current_position;
-    
+    Eigen::Vector3d                          current_position;    
 
     int alpha,
         coherence_loops,
@@ -60,12 +59,11 @@ private:
             altitude_constant_value,
             altitude_lower_value,
             altitude_upper_value,
-            run_rate;
+            run_rate,
+            avoid_distance;
 
     bool maintain_constant_altitude;
     bool range_limited_to_sectors;
-
-    float avoid_distance;
 
     // | ------------------------ subscriber callbacks --------------------------- |
     
@@ -78,14 +76,16 @@ private:
     void callbackNeighborsUVDAR(const mrs_msgs::PoseWithCovarianceArrayStamped::ConstPtr& array_pose);
     ros::Subscriber                                     sub_uav_uvdar;
     std::map<unsigned int, geometry_msgs::PointStamped> neighbors_position_;
+    std::map<int, Eigen::Vector3d>                      neighbors_pose;
     std::mutex                                          mutex_neighbors_position_;
-    float                                               neighbors_range;
+    double                                              neighbors_range;
     int                                                 neighbors_count;
     int                                                 neighbors_previous;
+    
 
     void               callbackObstacleLIDAR(const mrs_msgs::ObstacleSectors::ConstPtr& scan);
     ros::Subscriber    sub_uav_rplidar;
-    std::vector<float> sector = {0,0,0,0,0,0,0,0};
+    std::vector<double> sector = {0,0,0,0,0,0,0,0};
 
     // | --------------------------- timer callbacks ----------------------------- |
 
@@ -132,8 +132,10 @@ private:
     std::vector<int> sector_information;
 
     /* SET MARGIN */
-    void set_margin();
-    
+    void set_margin(); 
+
+    /* GET ANGLE */
+    double get_angle_to_object(Eigen::Vector3d uav, Eigen::Vector3d object);
 };
 
 } // namespace coherent

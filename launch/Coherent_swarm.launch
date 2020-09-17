@@ -5,9 +5,11 @@
   <arg name="RUN_TYPE" default="$(env RUN_TYPE)" />
 
   <arg name="simulation" default="true" />
+  <arg name="config_coherent" default="" />
+  <arg name="goal" default="" />
 
   <!-- will it run using GNU debugger? -->
-  <arg name="DEBUG" default="true" />
+  <arg name="DEBUG" default="false" />
   <arg unless="$(arg DEBUG)" name="launch_prefix_debug" value=""/>
   <arg     if="$(arg DEBUG)" name="launch_prefix_debug" value="debug_roslaunch"/>
 
@@ -21,11 +23,14 @@
 
   <group ns="$(arg UAV_NAME)">
     <node pkg="nodelet" type="nodelet" name="Coherent" args="$(arg nodelet) coherent/Coherent $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
+
       <!-- ROS parameters config file -->
       <param name="uav_name" value="$(arg UAV_NAME)" />
+
       <!-- Load a user param file -->
-      <rosparam file="$(find coherent-swarm-uav)/custom_configs/Coherent.yaml" />
-      <rosparam file="$(find coherent-swarm-uav)/custom_configs/goal.yaml" />
+      <rosparam if="$(eval not arg('config_coherent') == '')" file="$(arg config_coherent)" />
+      <rosparam if="$(eval not arg('goal') == '')" file="$(arg goal)" />
+
     </node>
   </group>
 </launch>
