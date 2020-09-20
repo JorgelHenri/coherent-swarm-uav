@@ -104,6 +104,7 @@ private:
     Eigen::Vector3d way_point;
     Eigen::Vector3d rotate_2d(Eigen::Vector3d vector, double angle_in_rad);
     double          random_number(double a, double b);
+    double          way_angle;
 
 
     /* STATE FUNCTION */
@@ -135,7 +136,7 @@ private:
     void set_margin(); 
 
     /* GET ANGLE */
-    double get_angle_to_object(Eigen::Vector3d uav, Eigen::Vector3d object);
+    double get_angle(Eigen::Vector3d uav, Eigen::Vector3d object);
 };
 
 } // namespace coherent
