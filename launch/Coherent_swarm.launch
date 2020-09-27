@@ -7,6 +7,7 @@
   <arg name="simulation" default="true" />
   <arg name="config_coherent" default="" />
   <arg name="goal" default="" />
+  <arg name="heading" default="" />
 
   <!-- will it run using GNU debugger? -->
   <arg name="DEBUG" default="false" />
@@ -22,7 +23,7 @@
   <arg     if="$(arg standalone)" name="nodelet_manager" value=""/>
 
   <group ns="$(arg UAV_NAME)">
-    <node pkg="nodelet" type="nodelet" name="Coherent" args="$(arg nodelet) coherent/Coherent $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
+    <node pkg="nodelet" type="nodelet" name="CoherentD" args="$(arg nodelet) coherentD/CoherentD $(arg nodelet_manager)" launch-prefix="$(arg launch_prefix_debug)" output="screen">
 
       <!-- ROS parameters config file -->
       <param name="uav_name" value="$(arg UAV_NAME)" />

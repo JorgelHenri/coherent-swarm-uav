@@ -19,8 +19,8 @@ windows:
   - spawn:
       layout: tiled
       panes:
-        - waitForSimulation; spawn_uav 1 --$UAV_TYPE --file uav1_pos.yaml --run --delete --enable-rangefinder --enable-rangefinder-up --enable-rplidar --enable-ground-truth --enable-uv-leds --led-frequencies 6 6 --debug --enable-uv-camera --uv-camera-calibration-file "$(rospack find uvdar_core)/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
-        - waitForSimulation; spawn_uav 2 --$UAV_TYPE --file uav2_pos.yaml --run --delete --enable-rangefinder --enable-rangefinder-up --enable-rplidar --enable-ground-truth --enable-uv-leds --led-frequencies 15 15 --debug --enable-uv-camera --uv-camera-calibration-file "$(rospack find uvdar_core)/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
+        - export UAV_NAME=uav1; waitForSimulation; spawn_uav 1 --$UAV_TYPE --file ./custom_configs/uav1_pos.yaml --run --delete --enable-rangefinder --enable-rangefinder-up --enable-rplidar --enable-ground-truth --enable-uv-leds --led-frequencies 6 6 --debug --enable-uv-camera --uv-camera-calibration-file "$(rospack find uvdar_core)/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
+        - export UAV_NAME=uav2; waitForSimulation; spawn_uav 2 --$UAV_TYPE --file ./custom_configs/uav2_pos.yaml --run --delete --enable-rangefinder --enable-rangefinder-up --enable-rplidar --enable-ground-truth --enable-uv-leds --led-frequencies 15 15 --debug --enable-uv-camera --uv-camera-calibration-file "$(rospack find uvdar_core)/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
   - control:
       layout: tiled
       panes:
@@ -69,5 +69,5 @@ windows:
       layout: even-vertical
       synchronize: after
       panes:
-        - export UAV_NAME=uav1; history -s roslaunch coherent-swarm-uav Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
-        - export UAV_NAME=uav2; history -s roslaunch coherent-swarm-uav Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav1; history -s roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav2; history -s roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml

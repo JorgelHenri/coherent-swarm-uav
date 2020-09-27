@@ -29,5 +29,3 @@
         direction to avoid the colision
 
 -------------------QUESTIONS-------------------
-parameter uav_name
-Can I use just odometry to this swarm works, or a better localizatior is necessary?

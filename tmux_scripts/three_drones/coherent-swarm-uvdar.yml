@@ -82,6 +82,6 @@ windows:
       layout: even-vertical
       synchronize: after
       panes:
-        - export UAV_NAME=uav1; roslaunch coherent-swarm-uav Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
-        - export UAV_NAME=uav2; roslaunch coherent-swarm-uav Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
-        - export UAV_NAME=uav3; roslaunch coherent-swarm-uav Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav1; roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav2; roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav3; roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml

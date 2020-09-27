@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>coherent-swarm-uav</name>
+  <name>coherent-swarm-uav-default</name>
   <version>0.0.0</version>
   <description>The coherent-swarm-uav package</description>
   <maintainer email="jorge.luiz.henri@hotmail.com">Jorge Henriques</maintainer>
