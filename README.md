@@ -3,4 +3,4 @@
 
 TODO
 
-For the test use the tmux_scripts folder, to start use the comand "$ ./coherent-swarm-uvdar.sh". 
+For the simulation test use the tmux_scripts folder, to start use the comand "$ ./coherent-swarm-uvdar.sh". 
