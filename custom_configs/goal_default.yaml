@@ -1,8 +1,0 @@
-goal:
-  sub_goal_change_distance: 1 # [m] if reached, sub-goal is shifted
-  sub_goal: [ # x, y, z (-1) for constant altitude value)
-              #-11.7, -22.6, -1,
-              1, 1, -1,
-              2, 5, -1,
-              7, 10, -1]
-            

@@ -73,7 +73,7 @@ void CoherentD::onInit() {
     way_point = rotate_2d(Eigen::Vector3d(1, 0, 0), random_number(0, 2 * M_PI));
     heading = random_number(0, 2 * M_PI);
     ROS_DEBUG("[Coherent - DEBUG]: Random initial waypoint: [%0.2f, %0.2f, %0.2f]", way_point[0], way_point[1], way_point[2]);
-    is_initialized_ = true;    
+    is_initialized_ = true;
     goal();
     set_margin();
     ROS_INFO_ONCE("[Coherent]: Goal initialized");
@@ -213,10 +213,11 @@ void CoherentD::callbackObstacleLIDAR(const mrs_msgs::ObstacleSectors::ConstPtr&
 
 /* callbackUAVCoherence */
 void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
-    double coherence_goal_offset = 0;
 
     std::vector<int> sector_information;
     sector_information = get_sector_information();
+    double coherence_goal_offset = 0;
+
 
     Eigen::Vector3d goal_ = sub_goals[current_goal_index];
 
@@ -247,45 +248,32 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
     snprintf(buff, sizeof(buff), "[%0.2f %0.2f %0.2f]", current_position[0], current_position[1], current_position[2]);
 
     /* states */
-    switch (state) {
+switch (state) {
         case FORWARD:
             ROS_DEBUG("[Coherent - DEBUG]: UAV is in FORWARD state.");
-            ROS_DEBUG("[Coherent]: neighbors: %d, neighborsP: %d, alpha: %d", neighbors_count, neighbors_previous, alpha);
             if (neighbors_count <= neighbors_previous && neighbors_count < alpha || neighbors_range > localization_distance) {
                 way_point = rotate_2d(way_point, M_PI);
-                ROS_INFO("[Coherent]: 180º degress.");
-                // ROS_INFO("[Coherent - DEBUG]: waypoint coherence: [%0.2f, %0.2f, %0.2f]", way_point[0], way_point[1], way_point[2]);
                 counter = 0;
                 state = COHERENCE;
             }
+            way_angle = get_angle(current_position, goal_);
+            way_point = rotate_2d(Eigen::Vector3d(1, 0, 0), way_angle);
             break;
         case COHERENCE:
-            ROS_DEBUG("UAV is in COHERENCE state.");
+            ROS_DEBUG("[Coherent - DEBUG]:UAV is in COHERENCE state.");
             if (counter >= coherence_loops) {
-                // Update navigation goal
-                double coherence_goal_offset = 0;
-                if (sub_goals.size() > 0) {
-                    Eigen::Vector3d goal = sub_goals.at(current_goal_index);
-                    if (dist(current_position, goal) > distance_goal_change) {
-                        coherence_goal_offset = get_positive_angle(
-                                atan2(goal[1] - current_position[1], goal[0] - current_position[0]));
-                        ROS_INFO("Angle to current goal [%0.2f, %0.2f, %0.2f]: %0.2f rad.", goal[0], goal[1], goal[2],
-                                  coherence_goal_offset);
-                        // If not already the last goal && is in range to the subgoal
-                    } else if (current_goal_index != sub_goals.size() - 1) {
-                        current_goal_index++;
-                    }
-                }
-                // ROS_INFO("Current goal [%0.2f %0.2f %0.2f].", sub_goals.at(current_goal_index)[0],
-                        //   sub_goals.at(current_goal_index)[1], sub_goals.at(current_goal_index)[2]);
-                ROS_DEBUG("Coherence goal offset = %0.2f", coherence_goal_offset);
+                coherence_goal_offset = get_positive_angle(
+                    atan2(goal_[1] - current_position[1], goal_[0] - current_position[0]));
+                ROS_DEBUG("[Coherent - DEBUG]: Angle to current goal [%0.2f, %0.2f, %0.2f]: %0.2f rad.", goal_[0], goal_[1], goal_[2],
+                        coherence_goal_offset);
+                ROS_DEBUG("[Coherent - DEBUG]: Current goal [%0.2f %0.2f %0.2f].", sub_goals[current_goal_index][0],
+                          sub_goals[current_goal_index][1], sub_goals[current_goal_index][2]);
+                ROS_DEBUG("[Coherent - DEBUG]: Coherence goal offset = %0.2f", coherence_goal_offset);
                 double turn_angle = coherence_goal_offset + random_number(-M_PI / 10.0f, M_PI / 10.0f);
-                ROS_INFO("COHERENT ANGLE: %f", turn_angle);
                 way_point = rotate_2d(Eigen::Vector3d(10, 0, 0), turn_angle);
-                heading = random_number(0, 2 * M_PI);
                 state = FORWARD;
             } else {
-                ROS_INFO("Counter: %d, coherence loop: %d.", counter, coherence_loops);
+                ROS_DEBUG("[Coherent - DEBUG]:Counter: %d, coherence loop: %d.", counter, coherence_loops);
             }
             break;
         case AVOIDANCE: {
@@ -295,19 +283,17 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
             Eigen::Vector3d one_x(1, 0, 0);
             for (int i = 0; i < sector_information.size(); i++) {
                 int sector_value = sector_information[i];
-                ROS_INFO("[Coherent - DEBUG]: Avoidance in sector %d; sector_value: %d  .", i, sector_value);
+                ROS_DEBUG("[Coherent - DEBUG]: Avoidance in sector %d; sector_value: %d  .", i, sector_value);
                 // For each sector with critically close object
                 if (sector_value == 1) {
                     // Sector from + 1/2 of sector
-                    ROS_DEBUG("[Coherent - DEBUG]: Sector margin: %f, %f, %f.", sectors_margin[i][0], sectors_margin[i][1], sectors_margin[i][0]);
                     double rot_angle = sectors_margin[i][0] + (sectors_margin[i][1] - sectors_margin[i][0]) / (double) 2;
-                    ROS_INFO("[Coherent - DEBUG]: Angle of rotation: %f", rot_angle);
+                    ROS_INFO("[Coherent]: Angle of rotation: %f", rot_angle);
                     sum -= rotate_2d(one_x, rot_angle);
-                    ROS_INFO("[Coherent - DEBUG]: sum: [%0.2f %0.2f %0.2f].", sum[0], sum[1], sum[2]);
                 }
             }
             way_point = sum / (double) critically_close;
-            // ROS_DEBUG("[Coherent - DEBUG]: Waypoint: [%0.2f %0.2f %0.2f].", way_point[0], way_point[1], way_point[2]);
+            ROS_DEBUG("[Coherent - DEBUG]: Waypoint: [%0.2f %0.2f %0.2f].", way_point[0], way_point[1], way_point[2]);
             state = previous_state;
         }
             break;
@@ -315,11 +301,24 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
             ROS_ERROR("[Coherent - ERROR]: No state present.");
             break;
     }
-    neighbors_previous = neighbors_count;
+    // Update navigation goal    
+    if (sub_goals.size() > 0) {
+        std::cout << "\n [Coherent - DEBUG]: goal: " << current_goal_index << "\n";
+        if (dist(current_position, goal_) > distance_goal_change) {
+            coherence_goal_offset = get_positive_angle(
+                    atan2(goal_[1] - current_position[1], goal_[0] - current_position[0]));
+            ROS_DEBUG("[Coherent - DEBUG]: Angle to current goal [%0.2f, %0.2f, %0.2f]: %0.2f rad.", goal_[0], goal_[1], goal_[2],
+                        coherence_goal_offset);
+            // If not already the last goal && is in range to the subgoal
+        } else if (current_goal_index != sub_goals.size() - 1) {
+            current_goal_index++;
+        }
+    }
     counter ++;
+    neighbors_previous = neighbors_count;
     /* sends goto */
-    way_point = limit(way_point, dist_max_one_step);
     ROS_DEBUG("[Coherent - DEBUG]: Way point: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
+    way_point = limit(way_point, dist_max_one_step);
     GoTo( current_position + way_point );
 }
 
@@ -343,7 +342,7 @@ void CoherentD::GoTo(Eigen::Vector3d position) {
     srv_reference_stamped_msg.request.reference.position.x = position[0];
     srv_reference_stamped_msg.request.reference.position.y = position[1];
     srv_reference_stamped_msg.request.reference.position.z = position[2];
-    srv_reference_stamped_msg.request.reference.heading = 0;
+    srv_reference_stamped_msg.request.reference.heading = 0.785;
     srv_client_goto_.call(srv_reference_stamped_msg);
 
     ros::spinOnce();

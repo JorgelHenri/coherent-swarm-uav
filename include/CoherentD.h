@@ -114,6 +114,8 @@ private:
     Eigen::Vector3d rotate_2d(Eigen::Vector3d vector, double angle_in_rad);
     double          random_number(double a, double b);
     double          way_angle;
+    double coherence_goal_offset = 0;
+
 
 
     /* STATE FUNCTION */

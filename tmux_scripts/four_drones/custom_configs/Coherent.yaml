@@ -14,9 +14,9 @@ controller:
   coherence_loops: 14
 
 uav:
-  localization_distance: 6 # [m]
+  localization_distance: 3 # [m]
   uav_names: ["uav1", "uav2"]
-  max_distance_in_one_step: 1.25 # [m]
+  max_distance_in_one_step: 0.75 # [m]
   avoid_distance: 2 # [m]
 
 sectors:
