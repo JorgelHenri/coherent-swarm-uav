@@ -1,7 +1,7 @@
 debug: false
 
 loop:
-  rate: 10 # Hz
+  rate: 2.5 # Hz 
   
 altitude:
   constant: true
@@ -10,14 +10,14 @@ altitude:
   upper_altitude: 10.0 # [m]
 
 controller:
-  alpha: 1
-  coherence_loops: 14
+  alpha: 2
+  coherence_loops: 5
 
 uav:
-  localization_distance: 6 # [m]
-  uav_names: ["uav1", "uav2"]
-  max_distance_in_one_step: 1.25 # [m]
-  avoid_distance: 2 # [m]
+  localization_distance: 6.0  # [m]
+  uav_names: ["uav1", "uav2", "uav3"]
+  max_distance_in_one_step: 0.5 # [m]
+  avoid_distance: 3.0 # [m]
 
 sectors:
   margins: [0.0, 0.7853,    # angle from, angle to

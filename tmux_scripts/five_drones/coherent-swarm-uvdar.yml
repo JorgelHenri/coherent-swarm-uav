@@ -1,0 +1,110 @@
+name: simulation
+root: ./
+startup_window: status
+pre_window: export UAV_NAME=uav1; export WORLD_FILE=./world.yaml; export RUN_TYPE=simulation; export UAV_TYPE=f450; export WORLD_NAME=simulation; export SENSORS="garmin_down"
+windows:
+  - roscore:
+      layout: tiled
+      panes:
+        - roscore
+  - gazebo:
+      layout: tiled
+      panes:
+        - waitForRos; roslaunch mrs_simulation simulation.launch gui:=true world_name:=lab_test
+  - status:
+      layout: tiled
+      panes:
+        - 'export UAV_NAME=uav1; waitForSimulation; roslaunch mrs_uav_status status.launch'
+        - 'export UAV_NAME=uav2; waitForSimulation; roslaunch mrs_uav_status status.launch'
+        - 'export UAV_NAME=uav3; waitForSimulation; roslaunch mrs_uav_status status.launch'
+        - 'export UAV_NAME=uav4; waitForSimulation; roslaunch mrs_uav_status status.launch'
+        - 'export UAV_NAME=uav5; waitForSimulation; roslaunch mrs_uav_status status.launch'
+  - spawn:
+      layout: tiled
+      panes:
+        - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "1 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/custom_configs/uav1_pos.yaml --enable-rplidar --enable-uv-leds --uvled-fr-r 5 --uvled-fr-l 5 --enable-uv-camera --uvcam-calib-file `rospack find uvdar_core`/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
+        - waitForSimulation; sleep 30; rosservice call /mrs_drone_spawner/spawn "2 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/custom_configs/uav2_pos.yaml --enable-rplidar --enable-uv-leds --uvled-fr-r 8 --uvled-fr-l 8 --enable-uv-camera --uvcam-calib-file `rospack find uvdar_core`/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
+        - waitForSimulation; sleep 60; rosservice call /mrs_drone_spawner/spawn "3 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/custom_configs/uav3_pos.yaml --enable-rplidar --enable-uv-leds --uvled-fr-r 10 --uvled-fr-l 10 --enable-uv-camera --uvcam-calib-file `rospack find uvdar_core`/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
+        - waitForSimulation; sleep 90; rosservice call /mrs_drone_spawner/spawn "4 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/custom_configs/uav4_pos.yaml --enable-rplidar --enable-uv-leds --uvled-fr-r 15 --uvled-fr-l 15 --enable-uv-camera --uvcam-calib-file `rospack find uvdar_core`/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
+        - waitForSimulation; sleep 120; rosservice call /mrs_drone_spawner/spawn "5 $UAV_TYPE --enable-rangefinder --enable-ground-truth --pos_file `pwd`/custom_configs/uav5_pos.yaml --enable-rplidar --enable-uv-leds --uvled-fr-r 30 --uvled-fr-l 30 --enable-uv-camera --uvcam-calib-file `rospack find uvdar_core`/include/OCamCalib/config/calib_results_bf_uv_fe.txt"
+  - control:
+      layout: tiled
+      panes:
+        - 'export UAV_NAME=uav1; history -s roslaunch mrs_uav_general core.launch DEBUG:=false config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav2; history -s roslaunch mrs_uav_general core.launch DEBUG:=false config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav3; history -s roslaunch mrs_uav_general core.launch DEBUG:=false config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav4; history -s roslaunch mrs_uav_general core.launch DEBUG:=false config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav5; history -s roslaunch mrs_uav_general core.launch DEBUG:=false config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+  - automatic_start:
+      layout: tiled
+      panes:
+        - 'export UAV_NAME=uav1; history -s roslaunch mrs_uav_general automatic_start.launch'
+        - 'export UAV_NAME=uav2; history -s roslaunch mrs_uav_general automatic_start.launch'
+        - 'export UAV_NAME=uav3; history -s roslaunch mrs_uav_general automatic_start.launch'
+        - 'export UAV_NAME=uav4; history -s roslaunch mrs_uav_general automatic_start.launch'
+        - 'export UAV_NAME=uav5; history -s roslaunch mrs_uav_general automatic_start.launch'
+  - bumper:
+      layout: tiled
+      panes:
+        - 'export UAV_NAME=uav1; history -s roslaunch mrs_bumper bumper.launch config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav2; history -s roslaunch mrs_bumper bumper.launch config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav3; history -s roslaunch mrs_bumper bumper.launch config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav4; history -s roslaunch mrs_bumper bumper.launch config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+        - 'export UAV_NAME=uav5; history -s roslaunch mrs_bumper bumper.launch config_mpc_tracker:=./custom_configs/mpc_tracker.yaml'
+  - takeoff:
+      layout: tiled
+      panes:
+        # #{ uav1
+        - 'export UAV_NAME=uav1;
+          history -s rosservice call /$UAV_NAME/mavros/cmd/arming 1;
+          history -s rosservice call /$UAV_NAME/mavros/set_mode 0 offboard'
+        # #}
+        # #{ uav2
+        - 'export UAV_NAME=uav2;
+          history -s rosservice call /$UAV_NAME/mavros/cmd/arming 1;
+          history -s rosservice call /$UAV_NAME/mavros/set_mode 0 offboard'
+        # #}
+        # #{ uav3
+        - 'export UAV_NAME=uav3;
+          history -s rosservice call /$UAV_NAME/mavros/cmd/arming 1;
+          history -s rosservice call /$UAV_NAME/mavros/set_mode 0 offboard'
+        # #}
+        # #{ uav4
+        - 'export UAV_NAME=uav4;
+          history -s rosservice call /$UAV_NAME/mavros/cmd/arming 1;
+          history -s rosservice call /$UAV_NAME/mavros/set_mode 0 offboard'
+        # #}
+        # #{ uav5
+        - 'export UAV_NAME=uav5;
+          history -s rosservice call /$UAV_NAME/mavros/cmd/arming 1;
+          history -s rosservice call /$UAV_NAME/mavros/set_mode 0 offboard'
+        # #}
+  - uv_observer:
+      layout: even-vertical
+      panes:
+        - waitForCompile; gz world --pause=0; sleep 6;  export UAV_NAME=uav1; history -s roslaunch uvdar_core multi_frequency_test.launch
+        - waitForCompile; gz world --pause=0; sleep 6;  export UAV_NAME=uav2; history -s roslaunch uvdar_core multi_frequency_test.launch
+        - waitForCompile; gz world --pause=0; sleep 6;  export UAV_NAME=uav3; history -s roslaunch uvdar_core multi_frequency_test.launch
+        - waitForCompile; gz world --pause=0; sleep 6;  export UAV_NAME=uav4; history -s roslaunch uvdar_core multi_frequency_test.launch
+        - waitForCompile; gz world --pause=0; sleep 6;  export UAV_NAME=uav5; history -s roslaunch uvdar_core multi_frequency_test.launch
+  - kalman_filter:
+      layout: even-vertical
+      panes:
+        - export UAV_NAME=uav1; history -s roslaunch uvdar_core uvdar_kalman_identified.launch output_frame:=$UAV_NAME/stable_origin
+        - export UAV_NAME=uav2; history -s roslaunch uvdar_core uvdar_kalman_identified.launch output_frame:=$UAV_NAME/stable_origin
+        - export UAV_NAME=uav3; history -s roslaunch uvdar_core uvdar_kalman_identified.launch output_frame:=$UAV_NAME/stable_origin
+        - export UAV_NAME=uav4; history -s roslaunch uvdar_core uvdar_kalman_identified.launch output_frame:=$UAV_NAME/stable_origin
+        - export UAV_NAME=uav5; history -s roslaunch uvdar_core uvdar_kalman_identified.launch output_frame:=$UAV_NAME/stable_origin
+  - slow_down:
+      layout: even-vertical
+      panes:
+        - waitForSimulation; waitForRos; sleep 15; gz physics -u 100
+  - coherent_swarming:
+      layout: even-vertical
+      synchronize: after
+      panes:
+        - export UAV_NAME=uav1; history -s roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav2; history -s roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav3; history -s roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav4; history -s roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml
+        - export UAV_NAME=uav5; history -s roslaunch coherent-swarm-uav-default Coherent_swarm.launch config_coherent:=./custom_configs/Coherent.yaml goal:=./custom_configs/goal.yaml

@@ -7,7 +7,6 @@
   <arg name="simulation" default="true" />
   <arg name="config_coherent" default="" />
   <arg name="goal" default="" />
-  <arg name="heading" default="" />
 
   <!-- will it run using GNU debugger? -->
   <arg name="DEBUG" default="false" />

@@ -27,5 +27,3 @@
         If an MAV gets closer to another MAV/MAVs or an abstacle than a given threshold 
         and an evasive manuever has to be performed that controls the MAV in the opposite 
         direction to avoid the colision
-
--------------------QUESTIONS-------------------

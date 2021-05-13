@@ -1,7 +1,7 @@
 uav_name:
   id: 2
-  x: 3.0
-  y: 0.0
+  x: 4.0
+  y: -2.0
   z: 0.0
   heading: 0.785
    
