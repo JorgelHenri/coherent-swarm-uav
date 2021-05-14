@@ -10,7 +10,7 @@ windows:
   - gazebo:
       layout: tiled
       panes:
-        - waitForRos; roslaunch mrs_simulation simulation.launch gui:=true world_name:=grass_plane
+        - waitForRos; roslaunch mrs_simulation simulation.launch gui:=true world_file:=./worlds/grass_plane_lab_test.world
   - status:
       layout: tiled
       panes:

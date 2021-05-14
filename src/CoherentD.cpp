@@ -46,10 +46,16 @@ void CoherentD::onInit() {
     }
 
     /* subscribes */
+
     sub_uav_odom = nh.subscribe<nav_msgs::Odometry>("/" + _this_uav_name_ + "/odometry/odom_main", 1, 
                                                                 &CoherentD::callbackUAVOdometry, this);
+
+    sub_position_cmd_ = nh.subscribe<mrs_msgs::PositionCommand>("/" + _this_uav_name_ + "/control_manager/position_cmd", 1, 
+                                                                &CoherentD::callbackPositionCMD, this);
+
     sub_uav_uvdar = nh.subscribe<mrs_msgs::PoseWithCovarianceArrayStamped>("/" + _this_uav_name_ + 
                                     "/uvdar/filteredPoses", 1, &CoherentD::callbackNeighborsUVDAR, this);
+
     sub_uav_rplidar = nh.subscribe<mrs_msgs::ObstacleSectors>("/" + _this_uav_name_ + 
                                 "/bumper/obstacle_sectors", 1,&CoherentD::callbackObstacleLIDAR, this);
     
@@ -59,9 +65,7 @@ void CoherentD::onInit() {
     /* service */
     srv_client_goto_ = nh.serviceClient<mrs_msgs::ReferenceStampedSrv>("/" + _this_uav_name_ + 
                                                                         "/control_manager/reference");
-    /* transformer */
-    tfr_ = mrs_lib::Transformer("SensorNeighbor", _this_uav_name_);
-
+    
     /* Initializing the swarm */
     ROS_INFO_ONCE("[Coherent]: initialized");
     ros::console::Level logger_level = (debug_mode) ? ros::console::levels::Debug : ros::console::levels::Info;
@@ -81,7 +85,7 @@ void CoherentD::onInit() {
 
 */
 
-/* callbackUAVOdometry - odom of position_cmd*/
+/* callbackUAVOdometry - odom of /odometry/odom_main*/
 void CoherentD::callbackUAVOdometry(const nav_msgs::Odometry::ConstPtr& odom) {
     if (!is_initialized_) {
         return;
@@ -92,6 +96,20 @@ void CoherentD::callbackUAVOdometry(const nav_msgs::Odometry::ConstPtr& odom) {
     current_position[1] = odom->pose.pose.position.y;
     current_position[2] = odom->pose.pose.position.z;
     ROS_DEBUG("[Coherent]: Current pose: %f, %f, %f", current_position[0], current_position[1],current_position[2]);
+    
+}
+
+/* callbackPositionCMD - odom of /control_manager/position_cmd*/
+void CoherentD::callbackPositionCMD(const mrs_msgs::PositionCommand::ConstPtr& pose_cmd) {
+    if (!is_initialized_) {
+        return;
+    }
+
+    // Put this uav pose in Eigen variable
+    this_pose_cmd[0] = pose_cmd->position.x;
+    this_pose_cmd[1] = pose_cmd->position.y;
+    this_pose_cmd[2] = pose_cmd->position.z;
+    ROS_DEBUG("[Coherent]: Current pose: %f, %f, %f", this_pose_cmd[0], this_pose_cmd[1],this_pose_cmd[2]);
     
 }
 
@@ -190,10 +208,6 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
         break;
     }
 
-    std_msgs::String advertise;
-    char buff[25];
-    snprintf(buff, sizeof(buff), "[%0.2f %0.2f %0.2f]", current_position[0], current_position[1], current_position[2]);
-
     /* states */
     switch (state) {
 
@@ -247,53 +261,14 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
                 counter = 0;
                 ROS_WARN("\n[Coherent]: State: %s FORCED FORWARD.", state_to_string(state).c_str());
 
-                /* Holds in the state of coherence until 2 run_rate or changes state*/
-                while(neighbors_count < alpha || state != AVOIDANCE){
-                    
-                    /* Check avoidance info */
-                    sector_information = get_sector_information();
-                    check_avoidance();
-
-                    /* Sends GoTo coordinates */
-                    way_point = limit(way_point, dist_max_one_step);
-                    GoTo( current_position + way_point );
-
-                    /* Time to braek the while */
-                    if (ros::Duration((1/run_rate)*3).sleep()){
-                        break;
-                    }
-
-                }
-
                 state = FORWARD;
 
             } else {
 
-                /* Just change the rotation in the firts time */ 
-                if (counter == 1) {
-                    /* Rotating 180 degrees to trying found your neighbors */
-                    way_point = rotate_2d(way_point, M_PI);
-                    ROS_DEBUG("[Coherent - DEBUG]: Way point COHERENT: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
-                    ROS_DEBUG("[Coherent - DEBUG]: Counter: %d, coherence loop: %d.", counter, coherence_loops);
-                }
-                            
-                /* Holds in the state of coherence until 1 run_rate or changes state*/
-                while(neighbors_count < alpha || state != AVOIDANCE){
-                    
-                    /* Check avoidance info */
-                    sector_information = get_sector_information();
-                    check_avoidance();
-
-                    /* Sends GoTo coordinates */
-                    way_point = limit(way_point, dist_max_one_step);
-                    GoTo( current_position + way_point );
-
-                    /* Time to braek the while */
-                    if (ros::Duration((1/run_rate)*2).sleep()){
-                        break;
-                    }
-
-                }
+                /* Rotating 180 degrees to trying found your neighbors */
+                way_point = rotate_2d(way_point, M_PI);
+                ROS_DEBUG("[Coherent - DEBUG]: Way point COHERENT: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
+                ROS_DEBUG("[Coherent - DEBUG]: Counter: %d, coherence loop: %d.", counter, coherence_loops);
 
                 state = FORWARD;
 
@@ -336,6 +311,7 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
         default:
         
             ROS_ERROR("[Coherent - ERROR]: No state present.");
+            state = FORWARD;
 
         break;
             
@@ -367,7 +343,7 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
     /* Sends goto */
     way_point = limit(way_point, dist_max_one_step);
     ROS_DEBUG("[Coherent - DEBUG]: Way point FINAL: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
-    GoTo( current_position + way_point );
+    GoTo( this_pose_cmd + way_point );
 
 }
 

@@ -6,17 +6,16 @@
 #include <ros/package.h>
 #include <ros/ros.h>
 
-#include <mrs_lib/attitude_converter.h>
+#include <mrs_lib/mutex.h>
 #include <mrs_lib/param_loader.h>
-#include <mrs_lib/transformer.h>
 
 #include <mrs_msgs/PoseWithCovarianceArrayStamped.h>
-#include <mrs_msgs/SpeedTrackerCommand.h>
 #include <mrs_msgs/ReferenceStampedSrv.h>
 #include <mrs_msgs/ObstacleSectors.h>
 #include <mrs_msgs/PositionCommand.h>
 
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Point.h>
 
 #include <std_srvs/Trigger.h>
 #include <std_msgs/String.h>
@@ -28,9 +27,6 @@
 #include <map>
 #include <mutex>
 #include <random>
-
-using test_t = geometry_msgs::PointStamped;
-template std::optional<test_t> mrs_lib::Transformer::transform<test_t>(const mrs_lib::TransformStamped& to_frame, const test_t& what);
 
 namespace coherentD
 {
@@ -46,12 +42,9 @@ private:
     /* Parameters */
     std::string                                         _this_uav_name_; 
     std::vector<std::string>                            _uav_names_;    
-    std::optional<mrs_lib::TransformStamped>            tf_output_;
-     
-
-    mrs_lib::Transformer                                tfr_;
 
     Eigen::Vector3d                                     current_position;    
+    Eigen::Vector3d                                     this_pose_cmd;    
 
     int alpha,
         coherence_loops,
@@ -75,6 +68,10 @@ private:
     geometry_msgs::Point                                this_uav_pose_;
     std::mutex                                          mutex_this_uav_pose_;
     bool                                                has_this_pose_;
+
+    void callbackPositionCMD(const mrs_msgs::PositionCommand::ConstPtr& pose_cmd);
+    ros::Subscriber                                     sub_position_cmd_;
+
 
     void callbackNeighborsUVDAR(const mrs_msgs::PoseWithCovarianceArrayStamped::ConstPtr& array_pose);
     ros::Subscriber                                     sub_uav_uvdar;
