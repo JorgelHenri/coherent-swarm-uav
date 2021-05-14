@@ -266,14 +266,6 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
                 counter = 0;
                 ROS_WARN("\n[Coherent]: State: %s FORCED FORWARD.", state_to_string(state).c_str());
 
-                /* Sends goto */
-                ROS_INFO("\n[Coherent]: neighbors count: %d.", neighbors_count);
-                ROS_INFO("\n[Coherent]: goal: %d. \n \n ", current_goal_index);
-                way_point = limit(way_point, dist_max_one_step*2);
-                ROS_DEBUG("[Coherent - DEBUG]: Way point FINAL: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
-                GoTo( this_pose_cmd + way_point );
-                return;
-
             } else {
 
                 /* Rotating 180 degrees to trying found your neighbors */
