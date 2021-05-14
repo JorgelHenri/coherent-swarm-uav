@@ -47,8 +47,9 @@ private:
     Eigen::Vector3d                                     this_pose_cmd;    
 
     int alpha,
-        coherence_loops,
-        counter;
+        coherence_loops;
+
+    int counter = 0;
 
     double localization_distance,
             dist_max_one_step,

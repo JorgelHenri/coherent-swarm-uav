@@ -183,6 +183,8 @@ void CoherentD::callbackObstacleLIDAR(const mrs_msgs::ObstacleSectors::ConstPtr&
 /* callbackUAVCoherence - main code of swarm*/
 void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
     
+    ROS_INFO("[Coherent - DEBUG]: Counter: %d, coherence loop: %d.", counter, coherence_loops);
+    
     /* Checking current goal */
     double coherence_goal_offset = 0;
     Eigen::Vector3d goal_ = sub_goals[current_goal_index];
@@ -223,6 +225,9 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
                 ROS_INFO("\n[Coherent]: State: %s DENIED.", state_to_string(state).c_str());
                 state = COHERENCE;
                 counter ++;
+                ROS_INFO("\n[Coherent]: neighbors count: %d.", neighbors_count);
+                ROS_INFO("\n[Coherent]: goal: %d. \n \n ", current_goal_index);
+                return;
 
 
             } else {
@@ -261,7 +266,13 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
                 counter = 0;
                 ROS_WARN("\n[Coherent]: State: %s FORCED FORWARD.", state_to_string(state).c_str());
 
-                state = FORWARD;
+                /* Sends goto */
+                ROS_INFO("\n[Coherent]: neighbors count: %d.", neighbors_count);
+                ROS_INFO("\n[Coherent]: goal: %d. \n \n ", current_goal_index);
+                way_point = limit(way_point, dist_max_one_step*2);
+                ROS_DEBUG("[Coherent - DEBUG]: Way point FINAL: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
+                GoTo( this_pose_cmd + way_point );
+                return;
 
             } else {
 
@@ -270,9 +281,9 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
                 ROS_DEBUG("[Coherent - DEBUG]: Way point COHERENT: [%0.2f %0.2f %0.2f]", way_point[0], way_point[1], way_point[2]);
                 ROS_DEBUG("[Coherent - DEBUG]: Counter: %d, coherence loop: %d.", counter, coherence_loops);
 
-                state = FORWARD;
-
             }
+        
+            state = FORWARD;
 
         break;
         }
@@ -312,6 +323,9 @@ void CoherentD::callbackUAVCoherence(const ros::TimerEvent& event){
         
             ROS_ERROR("[Coherent - ERROR]: No state present.");
             state = FORWARD;
+            ROS_INFO("\n[Coherent]: neighbors count: %d.", neighbors_count);
+            ROS_INFO("\n[Coherent]: goal: %d. \n \n ", current_goal_index);
+            return;
 
         break;
             
